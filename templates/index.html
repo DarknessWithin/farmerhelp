@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Farmer Agent</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    form { background: white; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; }
+    label { display: block; margin-top: 15px; }
+    input, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    button { background: #28a745; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>Crop & Investment Advisor</h2>
+  <form action="/predict" method="POST">
+    <label>Soil pH <input type="number" step="0.1" name="Soil_pH" required></label>
+    <label>Soil Moisture <input type="number" step="0.1" name="Soil_Moisture" required></label>
+
+    <label>Temperature (°C)
+      <input type="number" step="0.1" name="Temperature_C" id="tempField" required readonly>
+    </label>
+    <label>Rainfall (mm)
+      <input type="number" step="0.1" name="Rainfall_mm" id="rainField" required readonly>
+    </label>
+
+    <label>Fertilizer Usage (kg) <input type="number" step="0.1" name="Fertilizer_Usage_kg" required></label>
+    <label>Pesticide Usage (kg) <input type="number" step="0.1" name="Pesticide_Usage_kg" required></label>
+
+    <label>Demand Index <input type="number" step="0.1" name="Demand_Index" required></label>
+    <label>Supply Index <input type="number" step="0.1" name="Supply_Index" required></label>
+
+    <label>Competitor Price per ton <input type="number" step="0.1" name="Competitor_Price_per_ton" required></label>
+    <label>Economic Indicator <input type="number" step="0.1" name="Economic_Indicator" required></label>
+    <label>Weather Impact Score <input type="number" step="0.1" name="Weather_Impact_Score" required></label>
+    <label>Consumer Trend Index <input type="number" step="0.1" name="Consumer_Trend_Index" required></label>
+
+    <button type="submit">Get Advice</button>
+  </form>
+
+  <script>
+    const API_KEY = "YOUR_OPENWEATHERMAP_API_KEY"; // Replace with your key
+
+    function getWeatherData(lat, lon) {
+      fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`)
+        .then(response => response.json())
+        .then(data => {
+          const temp = data.main.temp;
+          const rainfall = data.rain && data.rain['1h'] ? data.rain['1h'] : 0;
+
+          const tempInput = document.getElementById('tempField');
+          const rainInput = document.getElementById('rainField');
+
+          tempInput.value = temp;
+          rainInput.value = rainfall;
+
+          tempInput.readOnly = true;
+          rainInput.readOnly = true;
+        })
+        .catch(error => console.error("Weather fetch error:", error));
+    }
+
+    window.onload = function () {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            const { latitude, longitude } = position.coords;
+            getWeatherData(latitude, longitude);
+          },
+          error => {
+            console.warn("Geolocation failed:", error.message);
+            document.getElementById('tempField').readOnly = false;
+            document.getElementById('rainField').readOnly = false;
+          }
+        );
+      } else {
+        alert("Geolocation not supported by this browser.");
+        document.getElementById('tempField').readOnly = false;
+        document.getElementById('rainField').readOnly = false;
+      }
+    };
+  </script>
+</body>
+</html>

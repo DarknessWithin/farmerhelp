@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Farmer - Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f4f7;
+        }
+        h1 {
+            color: #2e7d32;
+        }
+        .section {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .section h2 {
+            margin-top: 0;
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1b5e20;
+        }
+        #news-list li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome, Smart Farmer 👨‍🌾</h1>
+
+    <div class="section" id="weather-section">
+        <h2>🌦️ Weather at Your Farm</h2>
+        <p><strong>Temperature:</strong> <span id="temperature">Loading...</span> °C</p>
+        <p><strong>Rainfall:</strong> <span id="rainfall">Loading...</span> mm</p>
+        <p><strong>Location:</strong> <span id="location">Detecting...</span></p>
+    </div>
+
+    <div class="section">
+        <h2>📰 Latest Agricultural News</h2>
+        <ul id="news-list">
+            <li>Loading news headlines...</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>🌾 Get Smart Crop Advice</h2>
+        <p>Use our AI tool to get crop recommendations and investment tips tailored to your farm and market conditions.</p>
+        <button onclick="window.location.href='./index.html'">Go to Prediction Tool</button>
+    </div>
+
+    <script>
+        function fetchWeatherAndLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    document.getElementById('location').textContent = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+
+                    const res = await fetch(`/get_weather?lat=${lat}&lon=${lon}`);
+                    const data = await res.json();
+
+                    document.getElementById('temperature').textContent = data.temperature;
+                    document.getElementById('rainfall').textContent = data.rainfall;
+                }, function(error) {
+                    document.getElementById('location').textContent = "Permission Denied";
+                    console.log("Geolocation error:", error);
+                });
+            } else {
+                document.getElementById('location').textContent = "Geolocation not supported";
+            }
+        }
+
+        async function fetchNews() {
+            try {
+                const res = await fetch('/get_news');
+                const news = await res.json();
+                const list = document.getElementById('news-list');
+                list.innerHTML = '';
+                news.forEach(article => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="${article.url}" target="_blank">${article.title}</a>`;
+                    list.appendChild(li);
+                });
+            } catch (err) {
+                document.getElementById('news-list').innerHTML = "<li>Failed to load news.</li>";
+                console.error(err);
+            }
+        }
+
+        window.onload = () => {
+            fetchWeatherAndLocation();
+            fetchNews();
+        };
+    </script>
+</body>
+</html>
